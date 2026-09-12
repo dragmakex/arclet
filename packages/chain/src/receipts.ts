@@ -1,5 +1,14 @@
 import { decodeEventLog, getAddress, type TransactionReceipt } from "viem";
 import { erc20Abi } from "./tokens";
+export type ReconciledSwapMovement = { transactionHash: `0x${string}`; inputAtomic: bigint; outputAtomic: bigint; inputLogIndex: number; outputLogIndex: number };
+export function reconcileSwapReceipt(receipt: TransactionReceipt, expected: { wallet: string; inputToken: string; outputToken: string; inputAtomic: bigint }): ReconciledSwapMovement {
+  if (receipt.status !== "success") throw new Error("Swap receipt is not successful");
+  const wallet=getAddress(expected.wallet),inputToken=getAddress(expected.inputToken),outputToken=getAddress(expected.outputToken);let input: {amount:bigint;index:number}|undefined,output:{amount:bigint;index:number}|undefined;
+  for(const log of receipt.logs){try{const decoded=decodeEventLog({abi:erc20Abi,data:log.data,topics:log.topics});if(decoded.eventName!=="Transfer")continue;const args=decoded.args,address=getAddress(log.address);if(address===inputToken&&getAddress(args.from)===wallet&&args.value===expected.inputAtomic)input={amount:args.value,index:log.logIndex};if(address===outputToken&&getAddress(args.to)===wallet&&args.value>0n)output={amount:args.value,index:log.logIndex};}catch{continue}}
+  if(!input||!output)throw new Error("Receipt does not contain the exact wallet input and positive output movements");
+  return {transactionHash:receipt.transactionHash,inputAtomic:input.amount,outputAtomic:output.amount,inputLogIndex:input.index,outputLogIndex:output.index};
+}
+
 export function verifyErc20Transfer(receipt: TransactionReceipt, expected: { token: string; from: string; to: string; amount: bigint }): { transactionHash: `0x${string}`; logIndex: number } {
   if (receipt.status !== "success") throw new Error("Transaction receipt is not successful");
   const token = getAddress(expected.token), from = getAddress(expected.from), to = getAddress(expected.to);

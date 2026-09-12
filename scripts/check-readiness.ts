@@ -1,20 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
-import { z } from "zod";
-import { capabilityStatus } from "../config/runtime";
-
-const config = capabilityStatus();
-const required = ["README.md", "docs/architecture.svg", "docs/evidence/manifest.json", "SPEC.md", "AGENT.md", "PROMPT.md"];
-const missingArtifacts = required.filter((path) => !existsSync(path));
-const manifestSchema = z.object({ checks: z.array(z.object({ id: z.string(), status: z.enum(["PASS", "FAIL", "BLOCKED", "NOT_RUN"]) }).passthrough()) }).passthrough();
-const manifest = manifestSchema.parse(JSON.parse(readFileSync("docs/evidence/manifest.json", "utf8")));
-const report = {
-  schemaVersion: 1,
-  generatedAt: new Date().toISOString(),
-  environment: config.environment,
-  configuration: config.configured ? "PASS" : "BLOCKED",
-  buildArtifacts: missingArtifacts.length ? "FAIL" : "PASS",
-  missingArtifacts,
-  live: manifest.checks.map(({ id, status }) => ({ id, status }))
-};
-console.log(JSON.stringify(report, null, 2));
-if (!config.configured || missingArtifacts.length || report.live.some((item) => item.status !== "PASS")) process.exitCode = 1;
+import { existsSync,readFileSync } from "node:fs";import { createHash } from "node:crypto";import { z } from "zod";import { capabilityStatus } from "../config/runtime";
+const config=capabilityStatus(),required=["README.md","docs/architecture.svg","docs/evidence/manifest.json","SPEC.md","AGENT.md","PROMPT.md","docs/SECURITY.md","docs/HUMAN_CONTRIBUTIONS.md","docs/TEST_REPORT.md"],missingArtifacts=required.filter((path)=>!existsSync(path));const checkSchema=z.object({id:z.string(),status:z.enum(["PASS","FAIL","BLOCKED","NOT_RUN"]),artifacts:z.array(z.string()),artifactHashes:z.record(z.string(),z.string()).optional(),transactionHashes:z.array(z.string())}).passthrough(),manifest=z.object({commit:z.string(),environment:z.literal("arc-testnet"),checks:z.array(checkSchema)}).passthrough().parse(JSON.parse(readFileSync("docs/evidence/manifest.json","utf8"))),head=(await Bun.$`git rev-parse HEAD`.text()).trim();
+function validate(check:z.infer<typeof checkSchema>){const errors:string[]=[];for(const artifact of check.artifacts){if(!artifact.startsWith("docs/evidence/")||!existsSync(artifact)){errors.push(`missing or unsafe artifact ${artifact}`);continue}if(check.status==="PASS"){const expected=check.artifactHashes?.[artifact],actual=createHash("sha256").update(readFileSync(artifact)).digest("hex");if(!expected||expected!==actual)errors.push(`unverified artifact hash ${artifact}`)}}if(check.status==="PASS"&&check.artifacts.length===0)errors.push("PASS has no artifact");if(check.status==="PASS"&&["L2","L5","L9"].includes(check.id)&&check.transactionHashes.length===0)errors.push("PASS has no transaction hash");if(check.transactionHashes.some((hash)=>!/^0x[0-9a-fA-F]{64}$/.test(hash)))errors.push("malformed transaction hash");return errors}
+const evidence=manifest.checks.map((check)=>({id:check.id,declared:check.status,validated:validate(check).length===0?check.status:"FAIL",errors:validate(check)}));let automatedTests:"PASS"|"FAIL"|"NOT_RUN"="NOT_RUN";if(existsSync("docs/evidence/test-results.json")){try{const tests=z.object({commit:z.string(),commands:z.array(z.object({name:z.enum(["lint","typecheck","test","test:integration","test:e2e","build"]),status:z.literal("PASS")}))}).parse(JSON.parse(readFileSync("docs/evidence/test-results.json","utf8")));automatedTests=tests.commit===head&&new Set(tests.commands.map((item)=>item.name)).size===6?"PASS":"FAIL"}catch{automatedTests="FAIL"}}const report={schemaVersion:1,generatedAt:new Date().toISOString(),commit:head,environment:config.environment,configuration:config.configured?"PASS":"BLOCKED",capabilities:config.capabilities,buildArtifacts:missingArtifacts.length?"FAIL":"PASS",missingArtifacts,manifestCommit:manifest.commit===head?"PASS":"FAIL",evidence,automatedTests};console.log(JSON.stringify(report,null,2));if(!config.configured||missingArtifacts.length||manifest.commit!==head||automatedTests!=="PASS"||evidence.some((item)=>item.validated!=="PASS"))process.exitCode=1;

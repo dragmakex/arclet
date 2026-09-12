@@ -15,6 +15,13 @@
       "when": 1789249492468,
       "tag": "0001_brainy_shen",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789251671139,
+      "tag": "0002_breezy_baron_zemo",
+      "breakpoints": true
     }
   ]
 }

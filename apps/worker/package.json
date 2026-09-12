@@ -1,1 +1,16 @@
-{ "name": "@arclet/worker", "private": true, "type": "module", "scripts": { "dev": "bun src/index.ts" } }
+{
+  "name": "@arclet/worker",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "bun src/index.ts" },
+  "dependencies": {
+    "@arclet/chain": "workspace:*",
+    "@arclet/circle": "workspace:*",
+    "@arclet/domain": "workspace:*",
+    "@arclet/graph": "workspace:*",
+    "@arclet/policy": "workspace:*",
+    "postgres": "3.4.9",
+    "viem": "2.56.3",
+    "zod": "4.6.2"
+  }
+}

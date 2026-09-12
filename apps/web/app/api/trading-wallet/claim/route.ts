@@ -1,0 +1,2 @@
+import { claimWallet } from "../../../../lib/repository";import { authenticatedDatabaseUser } from "../../../../lib/request-user";import { requireMutationOrigin,safeApiError } from "../../../../lib/http";
+export async function POST(request:Request){try{requireMutationOrigin(request);const {user}=await authenticatedDatabaseUser(request);const wallet=await claimWallet(user.id);return Response.json({wallet:{address:wallet.address,chainId:5042002,custody:"application-operated"}})}catch(error){return safeApiError(error)}}

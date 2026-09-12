@@ -1,3 +1,1 @@
-import { authenticateRequest } from "../../../lib/auth";
-import { safeApiError } from "../../../lib/http";
-export async function GET(request: Request) { try { await authenticateRequest(request); return Response.json({ items: [], nextCursor: null, note: "No activity exists for this verified user." }); } catch (error) { return safeApiError(error); } }
+import { authenticatedDatabaseUser } from "../../../lib/request-user";import { database } from "../../../lib/repository";import { safeApiError } from "../../../lib/http";export async function GET(request:Request){try{const {user}=await authenticatedDatabaseUser(request);const items=await database()`SELECT d.id,d.result,d.reasons,d.created_at,e.state AS execution_state FROM decisions d JOIN strategies s ON s.id=d.strategy_id LEFT JOIN executions e ON e.decision_id=d.id WHERE s.user_id=${user.id} ORDER BY d.created_at DESC LIMIT 50`;return Response.json({items,nextCursor:null})}catch(error){return safeApiError(error)}}

@@ -12,6 +12,10 @@ The Privy embedded wallet remains user-controlled. Each funded user must receive
 
 The worker persists/leases work but does not submit provider mutations. Circle response schemas, wallet inventory, quote/minimum-output behavior, transfer reconciliation, and human amount approval must be verified first.
 
+## 2026-09-12: One live challenge per authorization purpose
+
+Mandate and withdrawal challenge issuance revokes older unconsumed challenges for the same strategy or trading wallet. Activation locks the trading-wallet row and rejects a second active strategy. This makes the application-level one-active-mandate rule and nonce consumption explicit without claiming onchain enforcement.
+
 ## 2026-09-12: Bun workspace without an imported upstream
 
 The repository was empty except for its three planning files and had no inherited lockfile. Bun 1.3.0 is used and exact resolved versions are recorded in `config/dependency-versions.json`.
