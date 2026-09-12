@@ -9,6 +9,7 @@ Environment: local macOS, Bun 1.3.0. Date: 2026-09-12.
 | `bun run typecheck` | PASS | Strict TypeScript |
 | `bun run test` | PASS | 28 offline unit assertions across 7 files |
 | `bun run test:integration` | PASS | 2 environment-isolation checks |
+| `DATABASE_URL=<unused> bunx drizzle-kit check --config packages/db/drizzle.config.ts` | PASS | Checked migration journal/schema structure without connecting |
 | `bun run test:e2e` | PASS | 1 Chromium setup/custody flow test after installing the pinned browser |
 | `bun run build` | PASS | Next.js production build and route generation |
 | `bun run probe:arc` | PARTIAL | Chain 5042002 and USDC 6/native 18 metadata verified at block 61793731; balance scale relation and receipt still pending |
