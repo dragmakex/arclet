@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "environment": "arc-testnet",
+  "chainId": 5042002,
+  "blockNumber": "61793731",
+  "blockHash": "0xab2274f182df5c053fb98a9b9980f51d55de400bfda38503001ccf6e511c0bfe",
+  "blockTimestamp": "1789248986",
+  "usdc": {
+    "address": "0x3600000000000000000000000000000000000000",
+    "symbol": "USDC",
+    "decimals": 6
+  },
+  "nativeCurrency": {
+    "symbol": "USDC",
+    "decimals": 18
+  },
+  "observedAt": "2026-09-12T21:36:27.062Z"
+}

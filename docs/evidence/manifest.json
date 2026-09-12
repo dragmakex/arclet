@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "commit": "NOT_GENERATED",
+  "environment": "arc-testnet",
+  "generatedAt": null,
+  "checks": [
+    { "id": "L1", "status": "BLOCKED", "artifacts": ["docs/evidence/arc/latest.json"], "transactionHashes": [], "notes": "Read-only chain ID and USDC/native decimal metadata passed on 2026-09-12. A balance-based native/ERC-20 scale relation and receipt check remain." },
+    { "id": "L2", "status": "NOT_RUN", "artifacts": [], "transactionHashes": [], "notes": "Privy funding not run." },
+    { "id": "L3", "status": "NOT_RUN", "artifacts": [], "transactionHashes": [], "notes": "Circle wallet and quotes not run." },
+    { "id": "L4", "status": "NOT_RUN", "artifacts": [], "transactionHashes": [], "notes": "Authenticated Graph query not run." },
+    { "id": "L5", "status": "NOT_RUN", "artifacts": [], "transactionHashes": [], "notes": "Autonomous swap not run." },
+    { "id": "L6", "status": "NOT_RUN", "artifacts": [], "transactionHashes": [], "notes": "Live Graph failure HOLD not run." },
+    { "id": "L7", "status": "NOT_RUN", "artifacts": [], "transactionHashes": [], "notes": "Live duplicate/restart test not run." },
+    { "id": "L8", "status": "NOT_RUN", "artifacts": [], "transactionHashes": [], "notes": "Live pause test not run." },
+    { "id": "L9", "status": "NOT_RUN", "artifacts": [], "transactionHashes": [], "notes": "Return transfer not run." },
+    { "id": "L10", "status": "NOT_RUN", "artifacts": [], "transactionHashes": [], "notes": "Public export human review not run." }
+  ]
+}

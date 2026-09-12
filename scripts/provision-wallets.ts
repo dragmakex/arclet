@@ -1,0 +1,1 @@
+console.error("Wallet provisioning is operator-only and intentionally not automated in the unverified build. Complete Circle login and review the pinned CLI before implementing this mutation.");process.exit(1);
