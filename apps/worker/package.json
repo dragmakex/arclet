@@ -1,1 +1,1 @@
-{ "name": "@arclet/worker", "private": true, "type": "module" }
+{ "name": "@arclet/worker", "private": true, "type": "module", "scripts": { "dev": "bun src/index.ts" } }
