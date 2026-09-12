@@ -1,0 +1,4 @@
+import { strategySpecSchema } from "@arclet/domain";
+import { authenticateRequest } from "../../../lib/auth";
+import { apiError, safeApiError } from "../../../lib/http";
+export async function POST(request: Request) { try { await authenticateRequest(request); const origin = request.headers.get("origin"); if (!origin || origin !== new URL(process.env.APP_CANONICAL_ORIGIN ?? "http://localhost:3000").origin) return apiError("FORBIDDEN", "Mutation origin does not match the configured application origin.", 403); const body: unknown = await request.json(); const parsed = strategySpecSchema.safeParse(body); if (!parsed.success) return apiError("VALIDATION", "Strategy does not satisfy the strict mandate schema.", 400); return apiError("DEPENDENCY_UNAVAILABLE", "Draft persistence requires the configured PostgreSQL service.", 503, true); } catch (error) { return safeApiError(error); } }
