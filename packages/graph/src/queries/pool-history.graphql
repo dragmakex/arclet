@@ -1,0 +1,3 @@
+query PoolHistory($pool: String!, $start: Int!, $block: Int!) {
+  poolHourDatas(first: 48, orderBy: periodStartUnix, orderDirection: desc, where: { pool: $pool, periodStartUnix_gte: $start }, block: { number: $block }) { periodStartUnix sqrtPrice volumeUSD tvlUSD pool { id } }
+}

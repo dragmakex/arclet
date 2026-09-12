@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "markets": [
+    {
+      "id": "usdc-cirbtc",
+      "enabled": false,
+      "status": "UNVERIFIED",
+      "executionChainId": 5042002,
+      "inputAsset": "USDC",
+      "outputAsset": "cirBTC",
+      "mappingKind": "PROXY",
+      "sourcePair": "Ethereum WBTC/USDC",
+      "strategyTypes": ["dca", "conditional"],
+      "reason": "Requires successful Circle quote and authenticated fresh Graph probe"
+    },
+    {
+      "id": "usdc-eurc",
+      "enabled": false,
+      "status": "UNVERIFIED",
+      "executionChainId": 5042002,
+      "inputAsset": "USDC",
+      "outputAsset": "EURC",
+      "mappingKind": "CROSS_NETWORK",
+      "sourcePair": "Ethereum EURC/USDC",
+      "strategyTypes": ["dca", "conditional"],
+      "reason": "Requires successful Circle quote and authenticated fresh Graph probe"
+    }
+  ]
+}

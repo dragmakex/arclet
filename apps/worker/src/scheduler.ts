@@ -1,0 +1,2 @@
+import type { Sql } from "postgres";
+export async function leaseDueJobs(sql: Sql, owner: string, limit = 10) { return sql.begin(async (tx) => tx`WITH due AS (SELECT id FROM jobs WHERE terminal = false AND scheduled_at <= now() AND (lease_expires_at IS NULL OR lease_expires_at < now()) ORDER BY scheduled_at FOR UPDATE SKIP LOCKED LIMIT ${limit}) UPDATE jobs SET lease_owner=${owner}, lease_expires_at=now()+interval '30 seconds', fencing_token=fencing_token+1, attempts=attempts+1 FROM due WHERE jobs.id=due.id RETURNING jobs.*`); }

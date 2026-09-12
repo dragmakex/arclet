@@ -1,0 +1,3 @@
+import type { Sql } from "postgres";
+function lockId(walletId: string): string { let hash = 0n; for (const byte of new TextEncoder().encode(walletId)) hash = BigInt.asIntN(63, hash * 31n + BigInt(byte)); return hash.toString(); }
+export async function withWalletLock<T>(sql: Sql<Record<string, never>>, walletId: string, work: () => Promise<T>): Promise<T> { const id = lockId(walletId); const rows = await sql<{ locked: boolean }[]>`SELECT pg_try_advisory_lock(${id}) AS locked`; if (!rows[0]?.locked) throw new Error("Wallet mutation lock is held by another worker"); try { return await work(); } finally { await sql`SELECT pg_advisory_unlock(${id})`; } }
