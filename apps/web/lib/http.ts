@@ -11,7 +11,7 @@ export function safeApiError(error: unknown) {
   if (code === "WRONG_ORIGIN") return apiError("FORBIDDEN", "Mutation origin does not match the configured application origin.", 403);
   if (code === "NOT_FOUND") return apiError("NOT_FOUND", "The requested object was not found for this user.", 404);
   if (["STATE_CONFLICT","CHALLENGE_EXPIRED","NONCE_REPLAY","APPROVAL_MISMATCH","RECEIPT_REUSED","INTENT_EXPIRED"].includes(code)) return apiError(code, "The request conflicts with current durable state.", 409);
-  if (["INVALID_SIGNATURE","UNSUPPORTED_MARKET","WALLET_REQUIRED","WALLET_CAPACITY"].includes(code)) return apiError(code, code === "WALLET_CAPACITY" ? "No distinct Circle Agent Wallet is available." : "The request failed an authorization or market safety requirement.", code === "WALLET_CAPACITY" ? 409 : 422);
+  if (["INVALID_SIGNATURE","UNSUPPORTED_MARKET","WALLET_REQUIRED","WALLET_CAPACITY","FUNDING_SENDER_MISMATCH"].includes(code)) return apiError(code, code === "WALLET_CAPACITY" ? "No distinct Circle Agent Wallet is available." : "The request failed an authorization or market safety requirement.", code === "WALLET_CAPACITY" ? 409 : 422);
   if (error instanceof SyntaxError) return apiError("VALIDATION", "Request JSON is malformed.", 400);
   return apiError("INTERNAL", "The request could not be completed.", 500, false);
 }

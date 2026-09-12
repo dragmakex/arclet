@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "environment": "arc-testnet",
   "chainId": 5042002,
-  "blockNumber": "61799129",
-  "blockHash": "0x8b679af0cf39f5b4ee36f93ffd261f0658b3f9d50cd330202040802981fd847c",
-  "blockTimestamp": "1789251755",
+  "blockNumber": "61801046",
+  "blockHash": "0xcf4f34fb9724620e838e2e951c63c3b600b54761f89fca7512f902fe4189280c",
+  "blockTimestamp": "1789252754",
   "usdc": {
     "address": "0x3600000000000000000000000000000000000000",
     "symbol": "USDC",
@@ -17,5 +17,5 @@
   "balanceScale": null,
   "receipt": null,
   "complete": false,
-  "observedAt": "2026-09-12T22:22:36.369Z"
+  "observedAt": "2026-09-12T22:39:15.364Z"
 }

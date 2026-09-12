@@ -9,6 +9,10 @@ export function reconcileSwapReceipt(receipt: TransactionReceipt, expected: { wa
   return {transactionHash:receipt.transactionHash,inputAtomic:input.amount,outputAtomic:output.amount,inputLogIndex:input.index,outputLogIndex:output.index};
 }
 
+export function verifyTransactionSender(transaction: { from: string }, expectedSender: string): void {
+  if (getAddress(transaction.from) !== getAddress(expectedSender)) throw new Error("Transaction sender does not match the funding intent");
+}
+
 export function verifyErc20Transfer(receipt: TransactionReceipt, expected: { token: string; from: string; to: string; amount: bigint }): { transactionHash: `0x${string}`; logIndex: number } {
   if (receipt.status !== "success") throw new Error("Transaction receipt is not successful");
   const token = getAddress(expected.token), from = getAddress(expected.from), to = getAddress(expected.to);

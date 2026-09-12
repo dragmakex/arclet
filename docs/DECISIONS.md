@@ -16,6 +16,14 @@ The worker persists/leases work but does not submit provider mutations. Circle r
 
 Mandate and withdrawal challenge issuance revokes older unconsumed challenges for the same strategy or trading wallet. Activation locks the trading-wallet row and rejects a second active strategy. This makes the application-level one-active-mandate rule and nonce consumption explicit without claiming onchain enforcement.
 
+## 2026-09-12: Retain funds for every ambiguous provider result
+
+A Circle-reported failure is not treated as proof that a submitted swap did not move funds. Reconciliation marks the execution `UNKNOWN`, retains the reservation, freezes the wallet, and keeps polling until an onchain receipt or other verified recovery evidence is available. Withdrawal provider failures likewise require operator attention rather than a blind retry.
+
+## 2026-09-12: Decision-time freshness and recurring evaluations
+
+The worker advances each active mandate to a unique next evaluation slot, never catches up missed DCA windows, and recomputes Graph source-block/swap age at every decision. A source RPC chain ID and pool token pair are checked before persisting an enabled-market observation. Pool factory verification remains an M0 live gate because no verified factory address has been recorded.
+
 ## 2026-09-12: Bun workspace without an imported upstream
 
 The repository was empty except for its three planning files and had no inherited lockfile. Bun 1.3.0 is used and exact resolved versions are recorded in `config/dependency-versions.json`.

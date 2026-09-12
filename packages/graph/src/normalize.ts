@@ -15,6 +15,14 @@ export type VerifiedSourceBlock = { chainId: number; number: number; hash: `0x${
 export type ApprovedGraphSource = { sourceChainId: number; deployment: string; pool: string; referenceToken: string; usdcToken: string; maxBlockAgeSeconds: number; maxHeadLagBlocks: number; maxLastSwapAgeSeconds: number };
 export type NormalizedGraphSnapshot = { deployment: string; pool: `0x${string}`; sourceChainId: number; sourceBlock: number; sourceBlockHash: `0x${string}`; sourceBlockTime: number; latestSwapAt: number; sourceBlockAgeSeconds: number; lastSwapAgeSeconds: number; headLagBlocks: number; sourceTvlUsdAtomic6: Atomic; referencePriceUsdcAtomic6: Atomic; token0: `0x${string}`; token1: `0x${string}`; healthy: true };
 
+/** Recompute observation age at decision time; fetch-time freshness is not durable. */
+export function currentObservationAges(sourceBlockTime: number, latestSwapAt: number, now: number) {
+  return {
+    sourceBlockAgeSeconds: sourceBlockTime <= now ? now - sourceBlockTime : Number.MAX_SAFE_INTEGER,
+    lastSwapAgeSeconds: latestSwapAt <= now ? now - latestSwapAt : Number.MAX_SAFE_INTEGER
+  };
+}
+
 export function normalizeSnapshot(data: SnapshotData, expected: ApprovedGraphSource, verifiedBlock: VerifiedSourceBlock, now: number): NormalizedGraphSnapshot {
   if (!data.pool) throw new Error("Graph response omitted the approved pool");
   if (data._meta.hasIndexingErrors) throw new Error("Graph deployment has indexing errors");

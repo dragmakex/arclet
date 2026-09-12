@@ -1,7 +1,7 @@
 import postgres, { type Sql } from "postgres";
 import { canonicalHash, mandateApprovalSchema, mandateDomain, mandateTypes, randomNonce, strategyIdHash, validateStrategySafety, verifyMandateSignature, verifyWithdrawalSignature, withdrawalApprovalSchema, withdrawalTypes, type StrategySpec } from "@arclet/domain";
 import { encodeFunctionData, getAddress } from "viem";
-import { ARC_USDC, createArcClient, erc20Abi, verifyErc20Transfer } from "@arclet/chain";
+import { ARC_USDC, createArcClient, erc20Abi, verifyErc20Transfer, verifyTransactionSender } from "@arclet/chain";
 import { runtimeSafetyLimits } from "../../../config/runtime";
 import markets from "../../../config/markets.json";
 import type { AuthenticatedUser } from "./auth";
@@ -97,7 +97,9 @@ export async function activateMandate(userId: string, owner: string, strategyId:
     if (!consumed[0]) throw new Error("NONCE_REPLAY");
     const active = await tx`UPDATE strategies SET state='ACTIVE',authorization_epoch=authorization_epoch+1,next_evaluation_at=now() WHERE id=${strategyId} AND user_id=${userId} AND current_version=${strategy.current_version} AND state='AWAITING_SIGNATURE' RETURNING id,state,authorization_epoch`;
     if (!active[0]) throw new Error("STATE_CONFLICT");
-    await tx`INSERT INTO jobs (type,payload,dedupe_key,scheduled_at) VALUES ('EVALUATE',${tx.json({ strategyId })},${`evaluate:${strategyId}:${strategy.current_version}`},now()) ON CONFLICT (dedupe_key) DO NOTHING`;
+    const initialAt = Math.floor(Date.now() / 1000);
+    await tx`UPDATE strategies SET next_evaluation_at=to_timestamp(${initialAt}) WHERE id=${strategyId}`;
+    await tx`INSERT INTO jobs (type,payload,dedupe_key,scheduled_at) VALUES ('EVALUATE',${tx.json({ strategyId })},${`evaluate:${strategyId}:${strategy.current_version}:${active[0].authorization_epoch}:${initialAt}`},to_timestamp(${initialAt})) ON CONFLICT (dedupe_key) DO NOTHING`;
     return active[0];
   });
 }
@@ -110,8 +112,17 @@ export async function pauseStrategy(userId: string, strategyId: string) {
   });
 }
 export async function resumeStrategy(userId: string, owner: string, strategyId: string) {
-  const rows = await database()`UPDATE strategies SET state='ACTIVE',pause_reason=NULL,next_evaluation_at=now() WHERE id=${strategyId} AND user_id=${userId} AND state='PAUSED' AND EXISTS (SELECT 1 FROM authorizations a JOIN strategy_versions v ON v.strategy_id=strategies.id AND v.version=strategies.current_version WHERE a.user_id=strategies.user_id AND a.purpose='mandate' AND a.consumed_at IS NOT NULL AND a.revoked_at IS NULL AND a.mandate_expires_at>now() AND a.typed_message->>'strategyHash'=v.spec_hash AND a.typed_message->>'owner'=${getAddress(owner)}) RETURNING id,state,authorization_epoch`;
-  if (!rows[0]) throw new Error("STATE_CONFLICT"); return rows[0];
+  return database().begin(async (tx) => {
+    // Share the trading-wallet lock used by withdrawal authorization so resume
+    // cannot race a newly authorized pending withdrawal.
+    const locked = await tx<[{ id: string }]>`SELECT w.id FROM strategies s JOIN trading_wallets w ON w.id=s.trading_wallet_id WHERE s.id=${strategyId} AND s.user_id=${userId} FOR UPDATE OF w`;
+    if (!locked[0]) throw new Error("NOT_FOUND");
+    const rows = await tx<[{ id: string; state: string; authorization_epoch: string; current_version: number }]>`UPDATE strategies SET state='ACTIVE',pause_reason=NULL,next_evaluation_at=now() WHERE id=${strategyId} AND user_id=${userId} AND state='PAUSED' AND NOT EXISTS (SELECT 1 FROM withdrawals wd WHERE wd.wallet_id=strategies.trading_wallet_id AND wd.state NOT IN ('CONFIRMED','FAILED','CANCELLED')) AND EXISTS (SELECT 1 FROM authorizations a JOIN strategy_versions v ON v.strategy_id=strategies.id AND v.version=strategies.current_version WHERE a.user_id=strategies.user_id AND a.purpose='mandate' AND a.consumed_at IS NOT NULL AND a.revoked_at IS NULL AND a.mandate_expires_at>now() AND a.typed_message->>'strategyHash'=v.spec_hash AND a.typed_message->>'owner'=${getAddress(owner)}) RETURNING id,state,authorization_epoch,current_version`;
+    if (!rows[0]) throw new Error("STATE_CONFLICT");
+    const initialAt = Math.floor(Date.now() / 1000);
+    await tx`INSERT INTO jobs (type,payload,dedupe_key,scheduled_at) VALUES ('EVALUATE',${tx.json({ strategyId })},${`evaluate:${strategyId}:${rows[0].current_version}:${rows[0].authorization_epoch}:${initialAt}`},to_timestamp(${initialAt})) ON CONFLICT (dedupe_key) DO NOTHING`;
+    return rows[0];
+  });
 }
 export async function createFundingIntent(userId: string, source: string, amountAtomic: string) {
   const wallet = await assignedWallet(userId); if (!wallet) throw new Error("WALLET_REQUIRED"); const expiresAt = new Date(Date.now() + 5 * 60_000);
@@ -121,7 +132,9 @@ export async function createFundingIntent(userId: string, source: string, amount
 export async function confirmFundingIntent(userId: string, intentId: string, hash: `0x${string}`) {
   const intents = await database()<[{ id: string; source_address: string; destination_address: string; token_address: string; amount_atomic: string; status: string; expires_at: Date }]>`SELECT id,source_address,destination_address,token_address,amount_atomic,status,expires_at FROM funding_intents WHERE id=${intentId} AND user_id=${userId}`;
   const intent = intents[0]; if (!intent) throw new Error("NOT_FOUND"); if (intent.status === "confirmed") return { id: intent.id, status: "confirmed" }; if (intent.expires_at.getTime() <= Date.now()) throw new Error("INTENT_EXPIRED");
-  const receipt = await createArcClient(process.env.ARC_RPC_URL).getTransactionReceipt({ hash });
+  const client = createArcClient(process.env.ARC_RPC_URL);
+  const [receipt, transaction] = await Promise.all([client.getTransactionReceipt({ hash }), client.getTransaction({ hash })]);
+  try { verifyTransactionSender(transaction, intent.source_address); } catch { throw new Error("FUNDING_SENDER_MISMATCH"); }
   const movement = verifyErc20Transfer(receipt, { token: intent.token_address, from: intent.source_address, to: intent.destination_address, amount: BigInt(intent.amount_atomic) });
   const receiptKey = `5042002:${movement.transactionHash}:${movement.logIndex}`;
   const rows = await database()`UPDATE funding_intents SET status='confirmed',receipt_key=${receiptKey} WHERE id=${intent.id} AND status='pending' RETURNING id,status,receipt_key`;
@@ -142,9 +155,26 @@ export async function createWithdrawalChallenge(userId: string, owner: string, a
     return { challengeId: rows[0]!.id, domain: mandateDomain(5042002, origin), types: withdrawalTypes, primaryType: "WithdrawalApproval" as const, message: wire };
   });
 }
-export async function submitWithdrawal(userId:string,owner:string,challengeId:string,signature:`0x${string}`,origin:string){
-  const challenges=await database()<[{typed_message:unknown;consumed_at:Date|null;revoked_at:Date|null;challenge_expires_at:Date}]>`SELECT typed_message,consumed_at,revoked_at,challenge_expires_at FROM authorizations WHERE id=${challengeId} AND user_id=${userId} AND purpose='withdrawal'`;const challenge=challenges[0];if(!challenge||challenge.consumed_at||challenge.revoked_at||challenge.challenge_expires_at.getTime()<=Date.now())throw new Error("CHALLENGE_EXPIRED");
-  const approval=withdrawalApprovalSchema.parse(challenge.typed_message);if(!await verifyWithdrawalSignature({approval,signature,origin,expectedOwner:owner}))throw new Error("INVALID_SIGNATURE");
-  const wallet=await assignedWallet(userId);if(!wallet||getAddress(wallet.address)!==approval.tradingWallet)throw new Error("APPROVAL_MISMATCH");
-  return database().begin(async(tx)=>{const consumed=await tx`UPDATE authorizations SET signature=${signature},consumed_at=now() WHERE id=${challengeId} AND consumed_at IS NULL AND revoked_at IS NULL AND challenge_expires_at>now() RETURNING id`;if(!consumed[0])throw new Error("NONCE_REPLAY");await tx`UPDATE strategies SET state='PAUSED',authorization_epoch=authorization_epoch+1,pause_reason='withdrawal_requested' WHERE user_id=${userId} AND trading_wallet_id=${wallet.id} AND state='ACTIVE'`;const rows=await tx<[{id:string}]>`INSERT INTO withdrawals (user_id,wallet_id,destination_address,asset_id,amount_atomic,authorization_id,state) VALUES (${userId},${wallet.id},${approval.destination},${approval.assetId},${approval.amountAtomic.toString()},${challengeId},'AUTHORIZED') RETURNING id`;await tx`INSERT INTO jobs (type,payload,dedupe_key,scheduled_at) VALUES ('WITHDRAWAL',${tx.json({withdrawalId:rows[0]!.id})},${`withdrawal:${rows[0]!.id}`},now())`;return {id:rows[0]!.id,state:"AUTHORIZED"};});
+export async function submitWithdrawal(userId: string, owner: string, challengeId: string, signature: `0x${string}`, origin: string) {
+  const challenges = await database()<[{ typed_message: unknown; consumed_at: Date | null; revoked_at: Date | null; challenge_expires_at: Date }]>`SELECT typed_message,consumed_at,revoked_at,challenge_expires_at FROM authorizations WHERE id=${challengeId} AND user_id=${userId} AND purpose='withdrawal'`;
+  const challenge = challenges[0];
+  if (!challenge || challenge.consumed_at || challenge.revoked_at || challenge.challenge_expires_at.getTime() <= Date.now()) throw new Error("CHALLENGE_EXPIRED");
+  const approval = withdrawalApprovalSchema.parse(challenge.typed_message);
+  if (!await verifyWithdrawalSignature({ approval, signature, origin, expectedOwner: owner })) throw new Error("INVALID_SIGNATURE");
+  const wallet = await assignedWallet(userId);
+  if (!wallet || getAddress(wallet.address) !== approval.tradingWallet) throw new Error("APPROVAL_MISMATCH");
+  return database().begin(async (tx) => {
+    // Lock the wallet mapping before checking outstanding withdrawals. This prevents
+    // two valid signatures from both becoming funded transfer jobs.
+    const lockedWallet = await tx<[{ id: string }]>`SELECT id FROM trading_wallets WHERE id=${wallet.id} AND user_id=${userId} FOR UPDATE`;
+    if (!lockedWallet[0]) throw new Error("NOT_FOUND");
+    const outstanding = await tx<[{ id: string }]>`SELECT id FROM withdrawals WHERE wallet_id=${wallet.id} AND state NOT IN ('CONFIRMED','FAILED','CANCELLED') FOR UPDATE LIMIT 1`;
+    if (outstanding[0]) throw new Error("STATE_CONFLICT");
+    const consumed = await tx`UPDATE authorizations SET signature=${signature},consumed_at=now() WHERE id=${challengeId} AND consumed_at IS NULL AND revoked_at IS NULL AND challenge_expires_at>now() RETURNING id`;
+    if (!consumed[0]) throw new Error("NONCE_REPLAY");
+    await tx`UPDATE strategies SET state='PAUSED',authorization_epoch=authorization_epoch+1,pause_reason='withdrawal_requested' WHERE user_id=${userId} AND trading_wallet_id=${wallet.id} AND state='ACTIVE'`;
+    const rows = await tx<[{ id: string }]>`INSERT INTO withdrawals (user_id,wallet_id,destination_address,asset_id,amount_atomic,authorization_id,state) VALUES (${userId},${wallet.id},${approval.destination},${approval.assetId},${approval.amountAtomic.toString()},${challengeId},'AUTHORIZED') RETURNING id`;
+    await tx`INSERT INTO jobs (type,payload,dedupe_key,scheduled_at) VALUES ('WITHDRAWAL',${tx.json({ withdrawalId: rows[0]!.id })},${`withdrawal:${rows[0]!.id}`},now())`;
+    return { id: rows[0]!.id, state: "AUTHORIZED" };
+  });
 }
