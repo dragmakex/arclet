@@ -57,11 +57,11 @@ bun run check:readiness
 - `packages/chain`: Arc client, token metadata, and independent ERC-20 receipt verification.
 - `packages/db`: PostgreSQL/Drizzle durable facts and uniqueness constraints.
 - `apps/worker`: leased job polling and per-wallet advisory lock boundary. External submissions remain gated.
-- `apps/web`: Next.js setup, wallet, strategy, activity, and authenticated fail-closed API surfaces.
+- `apps/web`: the one-screen newspaper-style wallet desk, setup/archive routes, and authenticated fail-closed API surfaces. The desk chat compiles a bounded proposal only after Privy authentication; its decision tape, trade ledger, and USDC line use persisted tenant-scoped facts only.
 
 ## Current limitations
 
-No market is enabled, no wallet is assigned, and no transaction evidence exists. The Graph deployment/pool, Circle CLI response schema and wallet inventory, Privy Arc transaction path, cirBTC decimals, and mainnet capabilities require real probes and human review. See `docs/BLOCKERS.md`, `docs/STATUS.md`, and `docs/TEST_REPORT.md`.
+No market is enabled, no wallet is assigned, and no transaction evidence exists. The desk's chart intentionally remains empty until coherent wallet snapshots exist; it is a persisted ERC-20 USDC balance view, not profit or a valuation. The Graph deployment/pool, Circle CLI response schema and wallet inventory, Privy Arc transaction path, cirBTC decimals, and mainnet capabilities require real probes and human review. See `docs/BLOCKERS.md`, `docs/STATUS.md`, and `docs/TEST_REPORT.md`.
 
 ## Submission materials
 

@@ -1,4 +1,6 @@
-import Link from "next/link";
-import { capabilityStatus } from "../../../config/runtime";
-export const dynamic="force-dynamic";
-export default function Home() { const status=capabilityStatus(); return <><section className="hero"><div><h1>Rules you sign. Decisions you can inspect.</h1></div><div><p>Arclet watches approved Graph evidence and prepares bounded Arc trades through a separate Circle trading wallet.</p><div className="actions"><Link className="button" href={status.configured?"/wallet":"/settings"}>{status.configured?"Open wallet":"Finish setup"}</Link><Link className="button secondary" href="/activity">View activity</Link></div></div></section><section className="grid"><article className="panel"><h2>No hidden trading authority</h2><p>Your Privy wallet signs funding and mandate approval. Funds in the assigned Circle wallet are under application custody.</p></article><article className="panel"><h2>Fail-closed status</h2><p className="muted">{status.configured?"Providers are configured. Live readiness still requires probes.":`${status.missing.length} required setup values are missing. Trading remains disabled.`}</p></article></section></>;}
+import { redirect } from "next/navigation";
+
+/** Arclet opens on the financial desk rather than a separate marketing surface. */
+export default function Home() {
+  redirect("/wallet");
+}

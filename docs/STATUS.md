@@ -8,7 +8,7 @@ Updated: 2026-09-12
 | M1 Financial skeleton | IN_PROGRESS | Tenant-scoped wallet claim, transaction-sender-bound funding confirmation, fixed-destination withdrawal authorization with one nonterminal withdrawal per wallet, custody UI | Real Privy funding and Circle return transfer NOT_RUN |
 | M2 Data and policy | IN_PROGRESS | Strict strategy/money/canonical contracts, Graph normalization/provenance with decision-time freshness recomputation, immutable draft versions, nonce-bound EIP-712 approval, pure policy engine | Live Graph deployment/pool/factory verification and PostgreSQL transaction tests remain blocked |
 | M3 Agentic loop | IN_PROGRESS | Recurring slot-deduplicated evaluations, reservation/idempotency state, lock/fence recheck before submit, wallet lock, UNKNOWN freeze/reconciliation, refreshed withdrawal balance guards | External submission remains gated because no market or provider session is verified; race/restart PostgreSQL tests remain blocked |
-| M4 Product completion | IN_PROGRESS | Responsive setup/wallet/activity states, custody/network disclosure, non-LLM controls | Browser suite and human usability review pending |
+| M4 Product completion | IN_PROGRESS | One-screen Swiss Industrial Print wallet desk with authenticated chat compiler, decision tape, trade ledger, and persisted-USDC chart; custody/network disclosure and non-LLM controls | Live records, browser suite, and human usability review pending |
 | M5 Submission | IN_PROGRESS | README, architecture, sponsor/docs templates, CI, NOT_RUN manifest | Live evidence, deployment, video, presentation deck, human review missing |
 | M6 Mainnet | NOT_STARTED | Mainnet config disabled | Separate September 30 readiness and human approval required |
 
@@ -18,4 +18,4 @@ See `docs/TEST_REPORT.md`. The final safety pass added recurring-schedule, decis
 
 ## Deferred
 
-Rebalancing, second market, per-trade review, charts, public mainnet deposits, and rich conversational activity explanation are deferred until the P0 live vertical slice passes.
+Rebalancing, second market, per-trade review, public mainnet deposits, and rich conversational activity explanation are deferred until the P0 live vertical slice passes. The desk chart is implemented but renders only persisted ERC-20 USDC snapshots; no asset valuation or performance chart is claimed.
