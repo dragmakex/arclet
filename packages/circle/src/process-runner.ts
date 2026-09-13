@@ -1,4 +1,5 @@
 import { isAbsolute } from "node:path";
+import { join } from "node:path";
 export type ProcessResult = { stdout: string; stderr: string; exitCode: number; timedOut: boolean; overflowed: boolean };
 
 export class RestrictedProcessRunner {
@@ -7,7 +8,7 @@ export class RestrictedProcessRunner {
   }
   async run(args: readonly string[]): Promise<ProcessResult> {
     if (args.some((arg) => arg.includes("\0") || arg.length > 512)) throw new Error("Unsafe Circle argument");
-    const child = Bun.spawn([this.executable, ...args], { env: { HOME: this.home, PATH: "/usr/local/bin:/usr/bin:/bin", LANG: "C.UTF-8" }, stdout: "pipe", stderr: "pipe" });
+    const child = Bun.spawn([this.executable, ...args], { env: { HOME: this.home, CIRCLE_CLI_HOME: join(this.home, ".circle"), PATH: "/usr/local/bin:/usr/bin:/bin", LANG: "C.UTF-8" }, stdout: "pipe", stderr: "pipe" });
     let timedOut = false, overflowed = false, bytes = 0;
     const stop = (reason: "timeout" | "overflow") => { if (reason === "timeout") timedOut = true; else overflowed = true; child.kill(); };
     const read = async (stream: ReadableStream<Uint8Array>) => {
