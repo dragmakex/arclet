@@ -3,6 +3,7 @@ export function apiError(code: string, message: string, status: number, retryabl
 export function requireMutationOrigin(request: Request) { const expected = new URL(process.env.APP_CANONICAL_ORIGIN ?? "http://localhost:3000").origin; if (request.headers.get("origin") !== expected) throw new Error("WRONG_ORIGIN"); return expected; }
 export function safeApiError(error: unknown) {
   const code = error instanceof Error ? error.message : "UNKNOWN";
+  if (code === "TRADING_INVITE_REQUIRED") return apiError(code, "Trading is invite-only and is currently unavailable for this account.", 403);
   if (code === "UNAUTHENTICATED") return apiError("UNAUTHORIZED", "A valid Privy bearer token is required.", 401);
   if (code === "AUTH_NOT_CONFIGURED") return apiError("DEPENDENCY_UNAVAILABLE", "Privy server verification is not configured.", 503, true);
   if (code === "DATABASE_NOT_CONFIGURED") return apiError("DEPENDENCY_UNAVAILABLE", "PostgreSQL is not configured.", 503, true);

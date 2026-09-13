@@ -2,7 +2,7 @@ import postgres, { type Sql } from "postgres";
 import { canonicalHash, mandateApprovalSchema, mandateDomain, mandateTypes, randomNonce, strategyIdHash, validateStrategySafety, verifyMandateSignature, verifyWithdrawalSignature, withdrawalApprovalSchema, withdrawalTypes, type StrategySpec } from "@arclet/domain";
 import { encodeFunctionData, getAddress } from "viem";
 import { ARC_USDC, createArcClient, erc20Abi, verifyErc20Transfer, verifyTransactionSender } from "@arclet/chain";
-import { runtimeSafetyLimits } from "../../../config/runtime";
+import { isTradingInvited, runtimeSafetyLimits } from "../../../config/runtime";
 import markets from "../../../config/markets.json";
 import type { AuthenticatedUser } from "./auth";
 
@@ -20,6 +20,10 @@ export async function assignedWallet(userId: string) {
   const rows = await database()<[{ id: string; address: string; circle_wallet_id: string }]>`SELECT id,address,circle_wallet_id FROM trading_wallets WHERE user_id=${userId} AND assignment_status='assigned' LIMIT 1`;
   return rows[0] ?? null;
 }
+export async function requireTradingInvitation(userId: string) {
+  const rows = await database()<[{ privy_user_id: string }]>`SELECT privy_user_id FROM users WHERE id=${userId}`;
+  if (!rows[0] || !isTradingInvited(rows[0].privy_user_id)) throw new Error("TRADING_INVITE_REQUIRED");
+}
 export async function claimWallet(userId: string) {
   return database().begin(async (tx) => {
     const existing = await tx<[{ id: string; address: string; circle_wallet_id: string }]>`SELECT id,address,circle_wallet_id FROM trading_wallets WHERE user_id=${userId} LIMIT 1`;
@@ -36,6 +40,7 @@ function enabledMarket(spec: StrategySpec) {
   return market;
 }
 export async function createStrategyDraft(userId: string, originalInstruction: string, rawSpec: unknown) {
+  await requireTradingInvitation(userId);
   const spec = validateStrategySafety(rawSpec, Math.floor(Date.now() / 1000), runtimeSafetyLimits()); enabledMarket(spec);
   const wallet = await assignedWallet(userId); if (!wallet) throw new Error("WALLET_REQUIRED");
   const canonical = JSON.parse(JSON.stringify(spec)), hash = canonicalHash(canonical);
@@ -51,6 +56,7 @@ export async function getStrategy(userId: string, strategyId: string) {
   if (!rows[0]) throw new Error("NOT_FOUND"); return rows[0];
 }
 export async function createMandateChallenge(userId: string, owner: string, strategyId: string, origin: string) {
+  await requireTradingInvitation(userId);
   const strategy = await getStrategy(userId, strategyId);
   if (strategy.state !== "DRAFT" && strategy.state !== "AWAITING_SIGNATURE") throw new Error("STATE_CONFLICT");
   const issuedAt = Math.floor(Date.now() / 1000);
@@ -77,6 +83,7 @@ export async function createMandateChallenge(userId: string, owner: string, stra
   });
 }
 export async function activateMandate(userId: string, owner: string, strategyId: string, challengeId: string, signature: `0x${string}`, origin: string) {
+  await requireTradingInvitation(userId);
   const strategy = await getStrategy(userId, strategyId);
   const challengeRows = await database()<[{ id: string; typed_message: unknown; consumed_at: Date | null; revoked_at: Date | null; challenge_expires_at: Date; nonce: string }]>`SELECT id,typed_message,consumed_at,revoked_at,challenge_expires_at,nonce FROM authorizations WHERE id=${challengeId} AND user_id=${userId} AND purpose='mandate'`;
   const challenge = challengeRows[0]; if (!challenge || challenge.consumed_at || challenge.revoked_at || challenge.challenge_expires_at.getTime() <= Date.now()) throw new Error("CHALLENGE_EXPIRED");

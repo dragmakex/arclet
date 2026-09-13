@@ -7,7 +7,7 @@ import type { Sql, TransactionSql } from "postgres";
 import { z } from "zod";
 import chain from "../../../config/chains/arc-testnet.json";
 import registry from "../../../config/markets.json";
-import { runtimeSafetyLimits } from "../../../config/runtime";
+import { maySubmitTrade, runtimeSafetyLimits } from "../../../config/runtime";
 
 const marketSchema = z.object({
   id: z.enum(["usdc-cirbtc", "usdc-eurc"]), enabled: z.literal(true), marketConfigHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/),
@@ -27,6 +27,8 @@ export async function evaluateJob(sql: Sql<Record<string, never>>, job: Job, ada
   const rows = await sql<StrategyRow[]>`SELECT s.id,s.state,s.current_version,s.authorization_epoch::text,v.canonical_spec,v.spec_hash,v.market_config_hash,w.id AS wallet_id,w.address AS wallet_address FROM strategies s JOIN strategy_versions v ON v.strategy_id=s.id AND v.version=s.current_version JOIN trading_wallets w ON w.id=s.trading_wallet_id WHERE s.id=${payload.strategyId}`;
   const row = rows[0];
   if (!row) return finish(sql, job);
+  const owners = await sql<[{ privy_user_id: string }]>`SELECT u.privy_user_id FROM strategies s JOIN users u ON u.id=s.user_id WHERE s.id=${row.id}`;
+  if (!owners[0] || !maySubmitTrade(owners[0].privy_user_id)) return finish(sql, job);
   const strategy = strategySpecSchema.parse(row.canonical_spec);
   const configured = registry.markets.find((item) => item.id === strategy.marketId);
   const marketResult = marketSchema.safeParse(configured);

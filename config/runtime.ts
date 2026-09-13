@@ -30,11 +30,19 @@ export const runtimeEnvSchema = z.object({
   MIN_USDC_RESERVE_ATOMIC: atomic.default("2000000"),
   MAX_SLIPPAGE_BPS: z.coerce.number().int().min(1).max(100).default(100),
   TRADING_ENABLED: boolString.default(false),
+  DEMO_USER_ALLOWLIST: z.string().default(""),
   ALLOW_MAINNET: z.literal("false").transform(() => false).default(false),
   EVIDENCE_DIR: z.string().default("./docs/evidence")
 }).strict();
 
 export type RuntimeConfig = z.infer<typeof runtimeEnvSchema>;
+// Exact, server-verified Privy user IDs only. Empty or missing denies everyone.
+export function isTradingInvited(privyUserId: string, source: NodeJS.ProcessEnv = process.env): boolean {
+  return !!privyUserId && (source.DEMO_USER_ALLOWLIST ?? "").split(",").map((id) => id.trim()).filter(Boolean).includes(privyUserId);
+}
+export function maySubmitTrade(privyUserId: string, source: NodeJS.ProcessEnv = process.env): boolean {
+  return source.TRADING_ENABLED === "true" && isTradingInvited(privyUserId, source);
+}
 const keys = Object.keys(runtimeEnvSchema.shape);
 export function parseRuntimeConfig(source: NodeJS.ProcessEnv = process.env) {
   const known = Object.fromEntries(keys.flatMap((key) => source[key] === undefined ? [] : [[key, source[key]]]));

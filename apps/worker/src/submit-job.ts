@@ -3,6 +3,7 @@ import { normalizedQuoteSchema, type CircleTradingAdapter, type SubmissionRefere
 import type { Sql } from "postgres";
 import { z } from "zod";
 import { withWalletLock } from "./wallet-lock";
+import { maySubmitTrade } from "../../../config/runtime";
 
 type Job = { id: string; payload: unknown; fencing_token: string; lease_owner: string };
 type SubmissionRow = {
@@ -25,6 +26,12 @@ export async function submitJob(sql: Sql<Record<string, never>>, job: Job, adapt
     const row = rows[0];
     const activeLease = await connection<[{ id: string }]>`SELECT id FROM jobs WHERE id=${job.id} AND terminal=false AND fencing_token=${job.fencing_token} AND lease_owner=${job.lease_owner} AND lease_expires_at>now()`;
     if (!row) return finish(connection, job);
+    const owners = await connection<[{ privy_user_id: string }]>`SELECT u.privy_user_id FROM executions e JOIN decisions d ON d.id=e.decision_id JOIN strategies s ON s.id=d.strategy_id JOIN users u ON u.id=s.user_id WHERE e.id=${row.id}`;
+    if (!owners[0] || !maySubmitTrade(owners[0].privy_user_id)) {
+      // Do not release reservations for an already submitted/uncertain action.
+      if (row.state === "RESERVED") return cancelReserved(connection, job, row.id);
+      return finish(connection, job);
+    }
     if (!canSubmitReserved({ executionState: row.state, strategyState: row.strategy_state, executionEpoch: row.authorization_epoch, strategyEpoch: row.current_epoch, activeLease: Boolean(activeLease[0]) })) return cancelReserved(connection, job, row.id);
 
     const quote = normalizedQuoteSchema.parse(row.quote);
