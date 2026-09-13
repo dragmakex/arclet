@@ -62,9 +62,10 @@ for attempt in {1..30}; do
   sleep 1
 done
 
-for site in /etc/nginx/sites-enabled/e-files /etc/nginx/sites-enabled/stickystein; do
+install -d -m 0755 /etc/nginx/sites-disabled
+for site in /etc/nginx/sites-enabled/e-files /etc/nginx/sites-enabled/stickystein /etc/nginx/sites-enabled/e-files.disabled /etc/nginx/sites-enabled/stickystein.disabled; do
   if [[ -L "$site" ]]; then
-    mv "$site" "$site.disabled"
+    mv --backup=numbered "$site" /etc/nginx/sites-disabled/
   fi
 done
 

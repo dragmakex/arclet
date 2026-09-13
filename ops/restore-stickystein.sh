@@ -6,10 +6,16 @@ if [[ ${EUID} -ne 0 ]]; then
   exit 1
 fi
 
+install -d -m 0755 /etc/nginx/sites-disabled
 if [[ -L /etc/nginx/sites-enabled/arclet ]]; then
-  mv /etc/nginx/sites-enabled/arclet /etc/nginx/sites-enabled/arclet.disabled
+  mv --backup=numbered /etc/nginx/sites-enabled/arclet /etc/nginx/sites-disabled/
 fi
 for site in e-files stickystein; do
+  for backup in "/etc/nginx/sites-disabled/$site" "/etc/nginx/sites-disabled/$site.disabled"; do
+    if [[ -L "$backup" && ! -e "/etc/nginx/sites-enabled/$site" ]]; then
+      mv "$backup" "/etc/nginx/sites-enabled/$site"
+    fi
+  done
   if [[ -L "/etc/nginx/sites-enabled/$site.disabled" ]]; then
     mv "/etc/nginx/sites-enabled/$site.disabled" "/etc/nginx/sites-enabled/$site"
   fi

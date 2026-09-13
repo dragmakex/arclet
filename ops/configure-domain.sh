@@ -27,6 +27,6 @@ certbot --nginx --non-interactive --agree-tos --redirect --email "$EMAIL" -d "$D
 
 sed -i "s#^APP_CANONICAL_ORIGIN=.*#APP_CANONICAL_ORIGIN=https://$DOMAIN#" "$ROOT/.env.production"
 systemctl restart arclet-web.service
-curl --fail --silent --show-error "https://$DOMAIN/api/health"
+curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 1 --connect-timeout 5 --max-time 10 "https://$DOMAIN/api/health"
 echo
 echo "Arclet is available at https://$DOMAIN"
