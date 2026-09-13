@@ -7,7 +7,6 @@ test-results/
 .env
 .env.*
 !.env.example
-!.env.production.example
 .circle/
 .circle-home/
 data/circle-home/
