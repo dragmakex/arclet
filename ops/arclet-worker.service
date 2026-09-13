@@ -1,0 +1,27 @@
+[Unit]
+Description=Arclet Persistent Trading Worker
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sticky
+Group=sticky
+WorkingDirectory=/home/sticky/git/arclet
+EnvironmentFile=/home/sticky/git/arclet/.env.production
+Environment=NODE_ENV=production
+Environment=HOME=/home/sticky/.arclet-circle
+ExecStart=/home/sticky/.bun/bin/bun apps/worker/src/index.ts
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=45
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/sticky/.arclet-circle
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

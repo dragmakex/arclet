@@ -26,6 +26,10 @@ bun run dev
 
 The first dependency resolution created the committed `bun.lock`; subsequent installs use `--frozen-lockfile`. Missing credentials produce a setup state and failed readiness, never mock success.
 
+## Native host deployment
+
+This repository includes a native systemd + nginx deployment for the current host. Arclet listens only on `127.0.0.1:3100`; nginx owns public ports 80/443. See [`ops/README.md`](ops/README.md). The old stickystein service and nginx source configuration are preserved for rollback, while the Circle trading worker stays disabled until its live safety gates pass.
+
 ## Verification
 
 ```sh

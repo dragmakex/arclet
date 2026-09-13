@@ -1,0 +1,26 @@
+[Unit]
+Description=Arclet Web
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sticky
+Group=sticky
+WorkingDirectory=/home/sticky/git/arclet/apps/web
+EnvironmentFile=/home/sticky/git/arclet/.env.production
+Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
+ExecStart=/home/sticky/.bun/bin/bun run start -- -H 127.0.0.1 -p 3100
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

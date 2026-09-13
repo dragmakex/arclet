@@ -1,0 +1,31 @@
+map $http_upgrade $arclet_connection_upgrade {
+    default upgrade;
+    '' close;
+}
+
+limit_req_zone $binary_remote_addr zone=arclet_app_rate:10m rate=10r/s;
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name __ARCLET_DOMAIN__;
+
+    location / {
+        proxy_pass http://127.0.0.1:3100;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $arclet_connection_upgrade;
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+        client_max_body_size 1m;
+        limit_req zone=arclet_app_rate burst=30 nodelay;
+    }
+
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+}
