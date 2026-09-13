@@ -1,1 +1,8 @@
-export default function ActivityPage(){return <div className="stack"><div><h1>Activity and evidence</h1><p className="muted">HOLD decisions, submissions, receipts, and source provenance appear here only when recorded.</p></div><section className="panel"><h2>Recent activity</h2><div className="empty">No decisions or transactions have been recorded.</div></section><section className="grid"><article className="panel"><h2>Source network</h2><dl><dt>Network</dt><dd>Not verified</dd><dt>Subgraph</dt><dd>Not probed</dd><dt>Pool</dt><dd>Not selected</dd></dl></article><article className="panel"><h2>Execution network</h2><dl><dt>Network</dt><dd>Arc Testnet</dd><dt>Circle route</dt><dd>Not verified</dd><dt>Receipt</dt><dd>None</dd></dl></article></section></div>}
+import { ActivityClient } from "../../components/activity-client";
+
+export const dynamic = "force-dynamic";
+
+export default function ActivityPage() {
+  if (process.env.NEXT_PUBLIC_PRIVY_APP_ID) return <ActivityClient />;
+  return <div className="stack"><div><p className="kicker">Archive</p><h1>Activity and evidence</h1><p className="muted">Configure Privy before Arclet can retrieve tenant-scoped records.</p></div><section className="panel"><h2>Recent decisions</h2><div className="empty">No decisions or transactions have been recorded. Arclet does not substitute example activity.</div></section></div>;
+}

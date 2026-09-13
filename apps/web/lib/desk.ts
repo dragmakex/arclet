@@ -3,12 +3,25 @@ export type DeskSnapshot = {
   usdcAtomic: string;
 };
 
+export type ConfirmedReceipt = {
+  transactionHash: string;
+  chainId: number;
+};
+
 export type DeskEntry = {
   id: string;
   result: "HOLD" | "EXECUTE";
   executionState: string | null;
   reasons: unknown;
   createdAt: string;
+  receipts?: ConfirmedReceipt[];
+  market?: {
+    id: string;
+    mappingKind: "PROXY" | "CROSS_NETWORK";
+    sourcePair: string;
+    executionChainId: number;
+    outputAsset: string;
+  } | null;
   observation: {
     provenance: unknown;
     metrics: unknown;
@@ -59,4 +72,14 @@ export function checkedFacts(reasons: unknown): string[] {
     if (typeof record.code !== "string") return [];
     return [`${record.code}: ${typeof record.fact === "string" ? record.fact : record.passed === true ? "checked" : "not met"}`];
   });
+}
+
+/** Exact six-decimal parsing for the UI boundary. */
+export function usdcInputToAtomic(value: string): string | null {
+  const match = /^(0|[1-9]\d*)(?:\.(\d{1,6}))?$/.exec(value.trim());
+  if (!match) return null;
+  const whole = BigInt(match[1]!);
+  const fraction = (match[2] ?? "").padEnd(6, "0");
+  const atomic = whole * 1_000_000n + BigInt(fraction || "0");
+  return atomic > 0n ? atomic.toString() : null;
 }

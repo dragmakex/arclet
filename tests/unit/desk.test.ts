@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkedFacts, decisionLabel, normalizeSnapshots, usdcLinePath } from "../../apps/web/lib/desk";
+import { checkedFacts, decisionLabel, normalizeSnapshots, usdcInputToAtomic, usdcLinePath } from "../../apps/web/lib/desk";
 
 describe("desk data transformation", () => {
   it("drops malformed persisted balances and keeps exact atomic strings", () => {
@@ -20,6 +20,13 @@ describe("desk data transformation", () => {
       { observedAt: "2026-09-12T00:00:00.000Z", usdcAtomic: "1000000" },
       { observedAt: "2026-09-12T00:01:00.000Z", usdcAtomic: "2000000" }
     ])).toBe("M0.00,180.00 L640.00,0.00");
+  });
+
+  it("parses user funding amounts into exact USDC atomic units", () => {
+    expect(usdcInputToAtomic("1")).toBe("1000000");
+    expect(usdcInputToAtomic("1.000001")).toBe("1000001");
+    expect(usdcInputToAtomic("0")).toBeNull();
+    expect(usdcInputToAtomic("1.0000001")).toBeNull();
   });
 
   it("renders structured policy facts without model reasoning", () => {

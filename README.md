@@ -57,7 +57,7 @@ bun run check:readiness
 - `packages/chain`: Arc client, token metadata, and independent ERC-20 receipt verification.
 - `packages/db`: PostgreSQL/Drizzle durable facts and uniqueness constraints.
 - `apps/worker`: leased job polling and per-wallet advisory lock boundary. External submissions remain gated.
-- `apps/web`: the one-screen newspaper-style wallet desk, setup/archive routes, and authenticated fail-closed API surfaces. The desk chat compiles a bounded proposal only after Privy authentication; its decision tape, trade ledger, and USDC line use persisted tenant-scoped facts only.
+- `apps/web`: the one-screen newspaper-style wallet desk, setup/archive routes, and authenticated fail-closed API surfaces. The desk reviews and signs bounded proposals through Privy only after the selected market is verified, prepares explicit funding and fixed-destination withdrawal signatures, and renders its decision tape, trade ledger, archive, and USDC line from tenant-scoped persisted facts only.
 
 ## Current limitations
 
