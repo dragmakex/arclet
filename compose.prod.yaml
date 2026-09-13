@@ -1,0 +1,110 @@
+name: arclet
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  init: true
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  caddy:
+    <<: *service-defaults
+    image: caddy:2.10.2-alpine
+    environment:
+      ARCLET_DOMAIN: ${ARCLET_DOMAIN:?Set ARCLET_DOMAIN in .env.production}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL in .env.production}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./ops/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge
+    depends_on:
+      web:
+        condition: service_healthy
+
+  web:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID:?Set NEXT_PUBLIC_PRIVY_APP_ID in .env.production}
+    env_file:
+      - .env.production
+    environment:
+      DATABASE_URL: postgresql://arclet:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.production}@db:5432/arclet
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    expose:
+      - "3000"
+    networks:
+      - edge
+      - backend
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "bun", "-e", "const r=await fetch('http://127.0.0.1:3000/api/health');if(!r.ok)process.exit(1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+
+  worker:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    env_file:
+      - .env.production
+    environment:
+      DATABASE_URL: postgresql://arclet:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.production}@db:5432/arclet
+      CIRCLE_CLI_PATH: /usr/local/bin/circle
+      CIRCLE_HOME: /home/bun
+      HOME: /home/bun
+    volumes:
+      - ./data/circle-home:/home/bun
+    networks:
+      - backend
+      - outbound
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    <<: *service-defaults
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_USER: arclet
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.production}
+      POSTGRES_DB: arclet
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arclet -d arclet"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+networks:
+  edge:
+  outbound:
+  backend:
+    internal: true
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:

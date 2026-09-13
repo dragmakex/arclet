@@ -9,7 +9,7 @@ Updated: 2026-09-12
 | M2 Data and policy | IN_PROGRESS | Strict strategy/money/canonical contracts, Graph normalization/provenance with decision-time freshness recomputation, immutable draft versions, nonce-bound EIP-712 approval, pure policy engine | Live Graph deployment/pool/factory verification and PostgreSQL transaction tests remain blocked |
 | M3 Agentic loop | IN_PROGRESS | Recurring slot-deduplicated evaluations, reservation/idempotency state, lock/fence recheck before submit, wallet lock, UNKNOWN freeze/reconciliation, refreshed withdrawal balance guards | External submission remains gated because no market or provider session is verified; race/restart PostgreSQL tests remain blocked |
 | M4 Product completion | IN_PROGRESS | Minimal black-and-white newspaper interface with Arclet title, one explanatory paragraph, one authenticated mandate chat, contextual decision/trade records, and a persisted-USDC history chart | Live records, authenticated provider browser coverage, and human usability review pending |
-| M5 Submission | IN_PROGRESS | README, architecture, sponsor/docs templates, CI, NOT_RUN manifest | Live evidence, deployment, video, presentation deck, human review missing |
+| M5 Submission | IN_PROGRESS | README, architecture, sponsor/docs templates, CI, NOT_RUN manifest, and a Netcup Ubuntu Compose deployment with Caddy TLS, private PostgreSQL, persistent worker, and protected Circle home | Live evidence, actual server deployment, video, presentation deck, human review missing |
 | M6 Mainnet | NOT_STARTED | Mainnet config disabled | Separate September 30 readiness and human approval required |
 
 ## Verified offline commands

@@ -27,3 +27,7 @@ The worker advances each active mandate to a unique next evaluation slot, never 
 ## 2026-09-12: Bun workspace without an imported upstream
 
 The repository was empty except for its three planning files and had no inherited lockfile. Bun 1.3.0 is used and exact resolved versions are recorded in `config/dependency-versions.json`.
+
+## 2026-09-13: Single-host Ubuntu deployment
+
+The first hosted target is one small Netcup Ubuntu server running Caddy, web, worker, and PostgreSQL through Docker Compose. Only Caddy publishes host ports. PostgreSQL stays on an internal network, while the worker receives outbound access for Arc, Graph, and Circle calls. Circle CLI 1.0.0 runs under pinned Node 22.14.0, with its full npm tree locked in `ops/circle-cli/package-lock.json`; Arclet application dependencies and runtime remain Bun-based. The Circle session uses a protected host bind mount and is never baked into the image.

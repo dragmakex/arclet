@@ -5,6 +5,7 @@
 .github/
 **/.circle/
 **/.circle-home/
+data/circle-home/
 private-evidence/
 node_modules/
 **/node_modules/

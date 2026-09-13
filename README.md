@@ -30,6 +30,12 @@ bun run dev
 
 The first dependency resolution created the committed `bun.lock`; subsequent installs use `--frozen-lockfile`. Missing credentials produce a setup state and failed readiness, never mock success.
 
+## Netcup Ubuntu deployment
+
+A production Compose stack is provided in `compose.prod.yaml`. It runs Caddy with automatic HTTPS, a private PostgreSQL service, the web application, and one persistent trading worker. The Circle session is stored in a protected host directory and is never baked into an image.
+
+Follow [`docs/UBUNTU_DEPLOYMENT.md`](docs/UBUNTU_DEPLOYMENT.md). Keep `TRADING_ENABLED=false` until the server-side probes and human authorization gates pass.
+
 ## Verification
 
 ```sh

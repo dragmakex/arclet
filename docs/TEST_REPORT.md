@@ -19,6 +19,9 @@ Environment: local macOS, Bun 1.3.0. Date: 2026-09-12.
 | `bun run doctor` | BLOCKED (expected) | Reports missing database/provider settings and trading disabled |
 | `bun run check:readiness` | BLOCKED (expected) | No provider configuration, live evidence, or current automated-test evidence manifest |
 | repository secret-pattern scan | PASS | No common private-key, AWS key, or API-key patterns found in tracked source |
+| `docker compose --env-file .env.production -f compose.prod.yaml config --quiet` | PASS | Netcup production Compose interpolation and structure validated with temporary non-secret values, including a URL-safe 64-character hexadecimal database password |
+| `sh -n ops/deploy.sh` | PASS | Production deployment script syntax |
+| production image build | NOT_RUN | Docker CLI is installed locally, but the Docker daemon was unavailable; build must be verified on the Ubuntu host, including Node 22 and pinned Circle CLI startup |
 | `bun run verify:live` | NOT_RUN | Money-moving, requires human authorization |
 
 Offline tests are not live-provider evidence. Authenticated draft/sign, Privy funding, withdrawal signature, provider-error, and receipt-link browser paths remain blocked until a real Privy test configuration and PostgreSQL environment are supplied; no mock-auth bypass is included in the testnet bundle. Update this report only with actual command results.
