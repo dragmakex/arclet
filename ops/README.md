@@ -13,7 +13,7 @@ PATH=/home/sticky/.bun/bin:$PATH bun run build
 sudo ./ops/install-host.sh
 ```
 
-`install-host.sh` starts Arclet, migrates its database, disables the old `e-files-web` service, and moves the enabled stickystein nginx symlink to `e-files.disabled`. It does not delete the old service, application, nginx source file, or certificate.
+`install-host.sh` creates a local database role and a random database password, stores that password only in the ignored mode-600 `.env.production`, starts Arclet, verifies its migrations, disables the old `e-files-web` service, and moves the enabled stickystein nginx symlink to `e-files.disabled`. It does not delete the old service, application, nginx source file, or certificate.
 
 After the new domain's A/AAAA records point to this host:
 
