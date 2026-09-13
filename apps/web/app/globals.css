@@ -161,6 +161,14 @@ main { width: min(100%, 980px); margin: 0 auto; padding: 54px 28px 90px; }
   .section-heading { align-items: flex-start; flex-direction: column; }
 }
 
+.loading-indicator { display: inline-flex; align-items: center; gap: .6em; }
+.loading-spinner { display: inline-block; width: 1em; height: 1em; flex-shrink: 0; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: arclet-spin .8s linear infinite; }
+.skeleton { min-height: 72px; background: var(--soft-line); animation: arclet-pulse 1.4s ease-in-out infinite; }
+.wallet-controls { overflow-wrap: anywhere; }
+.wallet-controls button { margin: 8px 8px 0 0; }
+@keyframes arclet-spin { to { transform: rotate(360deg); } }
+@keyframes arclet-pulse { 50% { opacity: .4; } }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }

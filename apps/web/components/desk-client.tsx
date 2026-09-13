@@ -4,6 +4,7 @@ import { type SignTypedDataParams, usePrivy, useSignTypedData } from "@privy-io/
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { checkedFacts, decisionLabel, usdcLinePath, type DeskEntry, type DeskFeed } from "../lib/desk";
 import { WalletControls } from "./wallet-controls";
+import { LoadingIndicator } from "./loading-indicator";
 
 type ApiFailure = { error?: { message?: string } };
 type CompileReply =
@@ -179,10 +180,10 @@ export function DeskClient() {
         </article>}
       </div>
 
-      <form className="simple-composer" onSubmit={send}>
+      <form className="simple-composer" onSubmit={send} aria-busy={loading}>
         <label className="sr-only" htmlFor="instruction">Tell Arclet how to trade</label>
         <textarea id="instruction" value={instruction} onChange={(event) => setInstruction(event.target.value)} rows={4} disabled={!ready || !authenticated || loading} placeholder="Tell Arclet how you want it to trade for you." />
-        {!authenticated && ready ? <button type="button" onClick={login}>Sign in</button> : <button type="submit" disabled={!ready || !authenticated || loading}>{loading ? "Working" : "Send"}</button>}
+        {!authenticated && ready ? <button type="button" onClick={login}>Sign in</button> : <button type="submit" disabled={!ready || !authenticated || loading}>{loading || !ready ? <LoadingIndicator label={!ready ? "Connecting…" : "Working…"} /> : "Send"}</button>}
       </form>
       <div className="simple-status" role="status"><span>{notice}</span>{feed.activeStrategy?.state === "ACTIVE" && <button className="pause-link" type="button" onClick={() => void pause()} disabled={loading}>Pause</button>}</div>
     </section>
