@@ -12,6 +12,7 @@ test-results/
 .circle-home/
 data/circle-home/
 private-evidence/
+docs/
 *.log
 *.dump
 *.sql.gz
