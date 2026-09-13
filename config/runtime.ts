@@ -24,7 +24,6 @@ export const runtimeEnvSchema = z.object({
   CIRCLE_CLI_PATH: z.string().startsWith("/").optional(),
   CIRCLE_HOME: z.string().startsWith("/").optional(),
   CIRCLE_CHAIN: z.literal("ARC-TESTNET").default("ARC-TESTNET"),
-  DEMO_USER_ALLOWLIST: z.string().min(1).optional(),
   MAX_FUNDED_USERS: z.coerce.number().int().min(1).max(5).default(5),
   MAX_TRADE_USDC_ATOMIC: atomic.default("2000000"),
   MAX_DAILY_TURNOVER_USDC_ATOMIC: atomic.default("5000000"),
@@ -51,7 +50,7 @@ export function capabilityStatus(source: NodeJS.ProcessEnv = process.env) {
   const parsed = parseRuntimeConfig(source);
   const capabilities = {
     database: capability(source, ["DATABASE_URL"]),
-    identity: capability(source, ["NEXT_PUBLIC_PRIVY_APP_ID", "PRIVY_APP_ID", "PRIVY_APP_SECRET", "DEMO_USER_ALLOWLIST"]),
+    identity: capability(source, ["NEXT_PUBLIC_PRIVY_APP_ID", "PRIVY_APP_ID", "PRIVY_APP_SECRET"]),
     marketData: capability(source, ["GRAPH_API_KEY", "SOURCE_RPC_URL", "GRAPH_DEPLOYMENT_ID", "GRAPH_POOL_ID"]),
     execution: capability(source, ["CIRCLE_CLI_PATH", "CIRCLE_HOME"]),
     compiler: capability(source, ["AI_BASE_URL", "AI_API_KEY", "AI_MODEL"])

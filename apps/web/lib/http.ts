@@ -7,7 +7,6 @@ export function safeApiError(error: unknown) {
   if (code === "AUTH_NOT_CONFIGURED") return apiError("DEPENDENCY_UNAVAILABLE", "Privy server verification is not configured.", 503, true);
   if (code === "DATABASE_NOT_CONFIGURED") return apiError("DEPENDENCY_UNAVAILABLE", "PostgreSQL is not configured.", 503, true);
   if (code === "EMBEDDED_WALLET_REQUIRED") return apiError("FORBIDDEN", "A verified Privy embedded EVM wallet is required.", 403);
-  if (code === "USER_NOT_INVITED") return apiError("FORBIDDEN", "This funded demo is restricted to invited users.", 403);
   if (code === "WRONG_ORIGIN") return apiError("FORBIDDEN", "Mutation origin does not match the configured application origin.", 403);
   if (code === "NOT_FOUND") return apiError("NOT_FOUND", "The requested object was not found for this user.", 404);
   if (["STATE_CONFLICT","CHALLENGE_EXPIRED","NONCE_REPLAY","APPROVAL_MISMATCH","RECEIPT_REUSED","INTENT_EXPIRED"].includes(code)) return apiError(code, "The request conflicts with current durable state.", 409);

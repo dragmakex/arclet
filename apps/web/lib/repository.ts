@@ -12,10 +12,8 @@ export function database(): Database {
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_NOT_CONFIGURED");
   return globalDatabase.arcletSql ??= postgres(process.env.DATABASE_URL, { max: 8, idle_timeout: 20 });
 }
-function allowlisted(userId: string): boolean { return (process.env.DEMO_USER_ALLOWLIST ?? "").split(",").map((value) => value.trim()).filter(Boolean).includes(userId); }
 export async function ensureUser(identity: AuthenticatedUser) {
-  if (!allowlisted(identity.privyUserId)) throw new Error("USER_NOT_INVITED");
-  const rows = await database()<[{ id: string; embedded_wallet_address: string; access_status: string }]>`INSERT INTO users (privy_user_id,embedded_wallet_address,access_status) VALUES (${identity.privyUserId},${identity.embeddedWalletAddress},'invited') ON CONFLICT (privy_user_id) DO UPDATE SET embedded_wallet_address=EXCLUDED.embedded_wallet_address RETURNING id,embedded_wallet_address,access_status`;
+  const rows = await database()<[{ id: string; embedded_wallet_address: string; access_status: string }]>`INSERT INTO users (privy_user_id,embedded_wallet_address,access_status) VALUES (${identity.privyUserId},${identity.embeddedWalletAddress},'public') ON CONFLICT (privy_user_id) DO UPDATE SET embedded_wallet_address=EXCLUDED.embedded_wallet_address RETURNING id,embedded_wallet_address,access_status`;
   return rows[0]!;
 }
 export async function assignedWallet(userId: string) {

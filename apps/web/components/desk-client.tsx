@@ -3,6 +3,7 @@
 import { type SignTypedDataParams, usePrivy, useSignTypedData } from "@privy-io/react-auth";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { checkedFacts, decisionLabel, usdcLinePath, type DeskEntry, type DeskFeed } from "../lib/desk";
+import { WalletControls } from "./wallet-controls";
 
 type ApiFailure = { error?: { message?: string } };
 type CompileReply =
@@ -186,6 +187,7 @@ export function DeskClient() {
       <div className="simple-status" role="status"><span>{notice}</span>{feed.activeStrategy?.state === "ACTIVE" && <button className="pause-link" type="button" onClick={() => void pause()} disabled={loading}>Pause</button>}</div>
     </section>
 
+    {authenticated && <WalletControls request={request} refresh={refresh} {...(feed.wallet ? { tradingAddress: feed.wallet.address } : {})} />}
     <AssetChart feed={feed} />
   </div>;
 }
