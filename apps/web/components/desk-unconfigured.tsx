@@ -1,11 +1,29 @@
 export function DeskUnconfigured() {
-  return <div className="desk">
-    <div className="desk-masthead"><div><p className="edition">ARCLET FINANCIAL DESK / ARC TESTNET</p><h1>THE MANDATE</h1></div><div className="masthead-note">Rules you approve. Facts we record.<br />No real monetary value.</div></div>
-    <div className="desk-grid">
-      <section className="chat-desk" aria-labelledby="chat-heading"><div className="section-heading"><div><p className="kicker">Correspondence</p><h2 id="chat-heading">Ask the desk</h2></div></div><div className="transcript"><article className="message message-agent"><p className="message-byline">ARCLET / SETUP NOTE</p><p>Configure Privy and server verification before signing in. Arclet never substitutes a mock identity or live trade.</p></article></div><div className="composer"><label htmlFor="setup-instruction">Instruction</label><textarea id="setup-instruction" rows={4} disabled placeholder="Setup is required before the desk can accept a request." /><div className="composer-actions"><button disabled>Ask Arclet</button></div></div><div className="desk-controls"><button className="pause-control" disabled aria-describedby="setup-control-note">Pause mandate</button><span id="setup-control-note">No mandate exists. Privy and a verified linked wallet are required before funding or withdrawal controls can be used.</span><button className="text-button" disabled aria-describedby="setup-control-note">Prepare withdrawal</button></div></section>
-      <aside className="agent-desk" aria-labelledby="agent-desk-heading"><div className="section-heading"><div><p className="kicker">Agent desk</p><h2 id="agent-desk-heading">Decision tape</h2></div><output className="desk-status">Needs setup</output></div><section className="tape-block"><h3>Latest rationale</h3><p>No decision has been recorded.</p></section><section className="tape-block"><h3>Checked facts</h3><p>Graph health, mandate limits, wallet balances, quote freshness, and execution state appear only after authenticated evaluations.</p></section><section className="tape-block"><h3>Source evidence</h3><p>No verified Graph deployment or pool has been selected.</p></section></aside>
-      <section className="ledger-section" aria-labelledby="ledger-heading"><div className="section-heading"><div><p className="kicker">Recorded actions</p><h2 id="ledger-heading">Trade ledger</h2></div><span className="ledger-count">0 entries</span></div><div className="ledger-empty">No HOLD, quote, submission, receipt, failed, or unknown state has been recorded.</div></section>
-      <section className="desk-section chart-section" aria-labelledby="portfolio-heading"><div className="section-heading"><div><p className="kicker">Ledger line</p><h2 id="portfolio-heading">Trading USDC</h2></div><p className="measure">Persisted ERC-20 USDC view</p></div><div className="chart-frame"><div className="chart-y-label top">USDC</div><div className="chart-y-label bottom">0</div><div className="chart-empty"><strong>No balance history yet.</strong><span>Arclet will draw this line only after coherent wallet snapshots are persisted.</span></div></div><div className="chart-caption"><span>No recorded balance</span><span>Not profit or performance. It excludes unverified asset valuation.</span></div></section>
-    </div>
+  return <div className="simple-desk">
+    <h1>Arclet</h1>
+    <p className="simple-intro">Tell Arclet how to trade. It turns your request into rules you approve, checks live market data, and reports every decision. This testnet uses a separate application-operated trading wallet.</p>
+
+    <section className="simple-chat" aria-label="Chat with Arclet">
+      <div className="simple-transcript" aria-live="polite">
+        <article className="simple-message agent-message">
+          <p>Connect Privy in setup before asking Arclet to create or explain a trading mandate.</p>
+        </article>
+      </div>
+      <div className="simple-composer">
+        <label className="sr-only" htmlFor="setup-instruction">Tell Arclet how to trade</label>
+        <textarea id="setup-instruction" rows={4} disabled placeholder="Tell Arclet how you want it to trade for you." />
+        <button disabled>Send</button>
+      </div>
+    </section>
+
+    <section className="simple-chart" aria-labelledby="assets-heading">
+      <h2 id="assets-heading">Assets over time</h2>
+      <div className="simple-chart-frame">
+        <svg viewBox="0 0 640 180" role="img" aria-label="No asset history is available yet">
+          <path className="simple-chart-rule" d="M0 1H640M0 90H640M0 179H640" />
+        </svg>
+        <p>No reconciled balance history yet.</p>
+      </div>
+    </section>
   </div>;
 }
