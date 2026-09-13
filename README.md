@@ -6,10 +6,6 @@ Arclet is a testnet-first conversational wallet that turns a user's instruction 
 
 ![Arclet architecture](docs/architecture.svg)
 
-## Safety and custody
-
-The Privy personal wallet and Circle trading wallet are different wallets. The personal wallet is user-controlled. Funds transferred to the dedicated Circle wallet are under Arclet's application-operated authority. A signed mandate is application authorization, not an onchain spending-control contract. Mainnet and trading are disabled by default.
-
 ## Prerequisites
 
 - Bun 1.3.0
@@ -58,11 +54,3 @@ bun run check:readiness
 - `packages/db`: PostgreSQL/Drizzle durable facts and uniqueness constraints.
 - `apps/worker`: leased job polling and per-wallet advisory lock boundary. External submissions remain gated.
 - `apps/web`: a minimal black-and-white newspaper interface with one authenticated strategy chat and one persisted-balance chart. Recorded HOLD and trade decisions return inside the conversation, while detailed setup, funding, withdrawal, and evidence capabilities remain protected behind tenant-scoped APIs.
-
-## Current limitations
-
-No market is enabled, no wallet is assigned, and no transaction evidence exists. The desk's chart intentionally remains empty until coherent wallet snapshots exist; it is a persisted ERC-20 USDC balance view, not profit or a valuation. The Graph deployment/pool, Circle CLI response schema and wallet inventory, Privy Arc transaction path, cirBTC decimals, and mainnet capabilities require real probes and human review. See `docs/BLOCKERS.md`, `docs/STATUS.md`, and `docs/TEST_REPORT.md`.
-
-## Submission materials
-
-Architecture, sponsor requirements, demo script, presentation outline, evidence manifest, AI-use disclosure, human-review log, and mainnet runbook live under `docs/`. The team must add genuine live evidence and a human-narrated video before making a qualifying claim.
