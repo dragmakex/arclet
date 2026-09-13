@@ -40,7 +40,7 @@ export async function refreshMarkets(sql: Sql<Record<string, never>>) {
     if (meta._meta.hasIndexingErrors || meta._meta.deployment !== market.deployment) throw new Error(`Graph metadata failed for ${market.id}`);
     const number = meta._meta.block.number;
     const block = await rpc.getBlock({ blockNumber: BigInt(number) });
-    const data = await client.query(document, { pool: market.pool.toLowerCase(), poolKey: market.pool.toLowerCase(), block: number }, snapshotDataSchema);
+    const data = await client.query(document, { pool: market.pool.toLowerCase(), poolKey: market.pool.toLowerCase(), block: block.hash }, snapshotDataSchema);
     const now = Math.floor(Date.now() / 1000);
     const normalized = normalizeSnapshot(data, {
       sourceChainId: market.sourceChainId, deployment: market.deployment, pool: market.pool, referenceToken: market.sourceReferenceToken, usdcToken: market.sourceUsdcToken,
@@ -49,7 +49,7 @@ export async function refreshMarkets(sql: Sql<Record<string, never>>) {
     const metrics = { marketId: market.id, marketConfigHash: market.marketConfigHash, ...normalized, sourceTvlUsdAtomic: normalized.sourceTvlUsdAtomic6, referencePriceUsdcAtomic: normalized.referencePriceUsdcAtomic6 };
     const provenance = buildProvenance({
       subgraphId: subgraph, deploymentId: market.deployment, sourceChainId: actualChainId, poolId: market.pool, sourceBlockNumber: number, sourceBlockHash: block.hash, sourceBlockTime: Number(block.timestamp), latestSwapTime: normalized.latestSwapAt,
-      fetchedAt: now, queryName: "MarketSnapshot", queryDocument: document, variables: { pool: market.pool.toLowerCase(), poolKey: market.pool.toLowerCase(), block: number }, normalizedMetrics: metrics, rawResponse: data
+      fetchedAt: now, queryName: "MarketSnapshot", queryDocument: document, variables: { pool: market.pool.toLowerCase(), poolKey: market.pool.toLowerCase(), block: block.hash }, normalizedMetrics: metrics, rawResponse: data
     });
     await sql`INSERT INTO market_observations (environment,provider,provenance,normalized_metrics,payload_hash,quality_verdict) VALUES ('arc-testnet','the-graph',${sql.json(provenance)},${sql.json(metrics)},${canonicalHash(data)},'HEALTHY')`;
   }

@@ -41,5 +41,8 @@ export function normalizeSnapshot(data: SnapshotData, expected: ApprovedGraphSou
   if (sourceBlockAgeSeconds < 0 || sourceBlockAgeSeconds > expected.maxBlockAgeSeconds || lastSwapAgeSeconds < 0 || lastSwapAgeSeconds > expected.maxLastSwapAgeSeconds || headLagBlocks < 0 || headLagBlocks > expected.maxHeadLagBlocks) throw new Error("Graph snapshot failed source RPC freshness checks");
   const ratio1Per0 = new ExactDecimal(data.pool.sqrtPrice).pow(2).div(new ExactDecimal(2).pow(192)).mul(new ExactDecimal(10).pow(d0 - d1));
   const usdc = getAddress(expected.usdcToken), usdcPerReference = token1 === usdc ? ratio1Per0 : new ExactDecimal(1).div(ratio1Per0);
-  return { deployment: data._meta.deployment, pool, sourceChainId: expected.sourceChainId, sourceBlock: verifiedBlock.number, sourceBlockHash: verifiedBlock.hash, sourceBlockTime: verifiedBlock.timestamp, latestSwapAt, sourceBlockAgeSeconds, lastSwapAgeSeconds, headLagBlocks, sourceTvlUsdAtomic6: decimalToAtomic(data.pool.totalValueLockedUSD, 6), referencePriceUsdcAtomic6: decimalToAtomic(usdcPerReference.toFixed(6), 6), token0, token1, healthy: true };
+  // Graph USD aggregates have sub-micro precision; floor the metric so liquidity is never overstated.
+  const tvl = new ExactDecimal(data.pool.totalValueLockedUSD);
+  if (!tvl.isFinite() || tvl.isNegative()) throw new Error("Invalid source TVL");
+  return { deployment: data._meta.deployment, pool, sourceChainId: expected.sourceChainId, sourceBlock: verifiedBlock.number, sourceBlockHash: verifiedBlock.hash, sourceBlockTime: verifiedBlock.timestamp, latestSwapAt, sourceBlockAgeSeconds, lastSwapAgeSeconds, headLagBlocks, sourceTvlUsdAtomic6: decimalToAtomic(tvl.toFixed(6), 6), referencePriceUsdcAtomic6: decimalToAtomic(usdcPerReference.toFixed(6), 6), token0, token1, healthy: true };
 }
